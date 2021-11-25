@@ -68,3 +68,52 @@ useEffect(() => {
 ```
 
 ![](https://images.velog.io/images/pumpkin/post/adc37d5c-306f-493b-80d5-7c0717f292b9/image.png)
+
+## 3. Clean up Effect
+Cleanup Effect는 이전에 일으킨 SideEffect를 정리할 필요가 있을 때 사용한다.
+```jsx
+useEffect(() => {
+	function handleScroll() {
+		console.log(window.scrollY)
+	}
+
+	document.addEventListener("scroll", handleScroll)
+	return () => {
+		document.removeEventLisnter("scroll", handleScroll)
+	}
+}, [])
+```
+이 예시는 페이지에 스크롤 이벤트가 일어날때마다 콘솔에 현재 스크롤이 위치한 y좌표를 출력하는것이다
+SideEffect이므로 useEffect안에서 사용하고, 이벤트리스너는 한번만 등록하면 되기 때문에 의존성 배열에는 빈 배열을 넣어주었다.
+하지만 페이지를 벗어났을 때 이 이벤트리스너는 필요 없어질 수 있기 때문에 Effect를 정리해줘야 한다. useEffect안에 해당 로직을 정리하는 동작을 정의해두면 된다.
+
+주의할 것은 단순히 컴포넌트가 생성되고, 사라지는 시점에만 Cleanup Effect가 실행되는건 아니라는 것이다. 다음 Effect가 일어나기전에, 이전 Effect의 영향을 정리해줘야 한다.
+```jsx
+const App = () => {
+  const [count, setCount] = useState(0);
+
+  console.log("render", count);
+
+  useEffect(() => {
+    console.log("useEffect Callback", count);
+    return () => {
+			console.log("cleanUp", count);
+		});
+  }, [count]);
+
+  return <div onClick={() => setCount(count + 1)}>하잉</div>;
+};
+
+export default Foo;
+```
+정답
+```jsx
+render, 0
+useEffect Callback, 0
+
+// 클릭
+
+render, 1
+cleanUp, 0
+useEffect Callback, 1
+```
